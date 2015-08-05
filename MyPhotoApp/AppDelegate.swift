@@ -7,17 +7,71 @@
 //
 
 import UIKit
+import Parse
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
-
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         // Override point for customization after application launch.
+        
+        // Initialize Parse.
+        Parse.setApplicationId("qxRoufTFoKBX7BbCM2Y4c2SBcSrPLM6R8BDoQ0zd",
+            clientKey: "peDM052ghiylsQ5Dl8fCZSjs82hUKTdGAAAtbjDP")
+     
+        let userNotificationTypes = (UIUserNotificationType.Alert |  UIUserNotificationType.Badge |  UIUserNotificationType.Sound);
+        
+        let settings = UIUserNotificationSettings(forTypes: userNotificationTypes, categories: nil)
+        application.registerUserNotificationSettings(settings)
+        
+        application.registerForRemoteNotifications()
+        
         return true
     }
+    
+    func application(application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: NSData) {
+        // Store the deviceToken in the current Installation and save it to Parse
+        let installation = PFInstallation.currentInstallation()
+        installation.setDeviceTokenFromData(deviceToken)
+      
+        installation.addUniqueObject("iOS", forKey: "channels")
+        installation.saveInBackgroundWithBlock { (success:Bool, error: NSError?) -> Void in
+            println("Registration successful? \(success)")
+        }
+    }
+    
+    func application(application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: NSError) {
+        println("Failed to register \(error.localizedDescription)")
+    }
+    
+    func application(application: UIApplication,  didReceiveRemoteNotification userInfo: [NSObject : AnyObject],  fetchCompletionHandler completionHandler: (UIBackgroundFetchResult) -> Void) {
+      
+        
+        if let photoId = userInfo["photoId"] as? NSString
+        {
+            println(photoId)
+            let mainStoryBoard:UIStoryboard = UIStoryboard(name:"Main", bundle:nil)
+            
+            let photoViewController = mainStoryBoard.instantiateViewControllerWithIdentifier("PhotoViewController") as! PhotoViewController
+            let viewControllerNav = UINavigationController(rootViewController: photoViewController)
+            self.window?.rootViewController = viewControllerNav
+        } else if let videoId = userInfo["videoId"] as? NSString
+        {
+            println(videoId)
+            let mainStoryBoard:UIStoryboard = UIStoryboard(name:"Main", bundle:nil)
+            
+            let videoViewController = mainStoryBoard.instantiateViewControllerWithIdentifier("VideoViewController") as! VideoViewController
+            let viewControllerNav = UINavigationController(rootViewController: videoViewController)
+            self.window?.rootViewController = viewControllerNav
+        } else {
+                PFPush.handlePush(userInfo)
+        }
+ 
+        completionHandler(UIBackgroundFetchResult.NewData)
+    }
+    
 
     func applicationWillResignActive(application: UIApplication) {
         // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.

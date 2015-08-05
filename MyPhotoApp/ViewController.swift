@@ -7,8 +7,10 @@
 //
 
 import UIKit
+import Parse
 
 class ViewController: UIViewController {
+    @IBOutlet weak var messageTextField: UITextField!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -20,6 +22,31 @@ class ViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
 
+    @IBAction func sendButtonTapped(sender: AnyObject) {
+     
+       if(messageTextField.text.isEmpty)
+       {
+        return
+       }
+        
+       let data = ["alert":messageTextField.text, "badge":"Increment"]
+       let channels = ["Swift"]
+        
+       let push = PFPush()
+        push.setData(data)
+        push.setChannels(channels)
+        push.sendPushInBackgroundWithBlock { (success:Bool, error:NSError?) -> Void in
+            if(success)
+            {
+               println("Success")
+            } else
+            {
+                println(error?.localizedDescription)
+            }
+        }
+        
+        
+    }
 
 }
 
